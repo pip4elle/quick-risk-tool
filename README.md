@@ -59,7 +59,3 @@ The EA also accounts for `SYMBOL_VOLUME_STEP` and `SYMBOL_VOLUME_MIN` to ensure 
 ## ⚠️ Disclaimer
 
 *This software is for educational purposes only. Trading Forex, Stocks, and CFDs involves significant risk. Past performance is not indicative of future results. Always test on a Demo Account before using real capital.*
-
----
-**Author:** Gemini AI  
-**Year:** 2026
