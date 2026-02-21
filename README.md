@@ -1,4 +1,4 @@
-# 📊 QuickRisk CleanDeinit for MetaTrader 5
+# 📊 QuickRisk for MetaTrader 5
 
 **QuickRisk** is a streamlined risk management Expert Advisor (EA) designed for MT5. It allows traders to visually define their risk directly on the chart using a draggable Stop Loss line, providing real-time lot size calculations based on a fixed Euro amount.
 
