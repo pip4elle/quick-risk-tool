@@ -6,10 +6,10 @@
 #include <Trade\Trade.mqh>
 
 //--- INPUT ---
-input double InpRiskEUR    = 50.0;       // Rischio fisso in Euro
-input double InpRRatio     = 2.0;        // Rapporto R/R (es. 2 = TP doppio dello SL)
-input string InpSLName     = "SL_LINE";  // Nome linea Stop Loss
-input color  InpLabelColor = clrWhite;   // Colore testo info
+input double InpRiskEUR    = 50.0;        // Rischio fisso in Euro
+input double InpRRatio     = 2.0;         // Rapporto R/R (es. 2 = TP doppio dello SL)
+input string InpSLName     = "SL_LINE";   // Nome linea Stop Loss
+input color  InpLabelColor = clrWhite;    // Colore testo info
 
 //--- GLOBALI ---
 CTrade trade;
@@ -22,10 +22,11 @@ int OnInit() {
     CreatePanel();
     CreateLabel();
     
-    double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-    
-    // Crea Linea SL
+    // --- MODIFICA PER IL TIMEFRAME ---
+    // Se la linea esiste già (es. dopo cambio TF), non fare nulla e mantieni il prezzo attuale.
+    // Se NON esiste, creala al prezzo corrente meno 200 punti.
     if(ObjectFind(0, InpSLName) < 0) {
+        double currentPrice = SymbolInfoDouble(_Symbol, SYMBOL_BID);
         ObjectCreate(0, InpSLName, OBJ_HLINE, 0, 0, currentPrice - (200 * _Point));
         ObjectSetInteger(0, InpSLName, OBJPROP_COLOR, clrRed);
         ObjectSetInteger(0, InpSLName, OBJPROP_WIDTH, 2);
@@ -38,24 +39,20 @@ int OnInit() {
 }
 
 //+------------------------------------------------------------------+
-//| Expert deinitialization function - PULIZIA TOTALE                |
+//| Expert deinitialization function - PULIZIA TOTALE                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason) {
-    // Rimuove i pulsanti (cerca tutti gli oggetti che iniziano con BT_)
-    ObjectsDeleteAll(0, "BT_");
-    
-    // Rimuove l'etichetta info
-    ObjectDelete(0, labelName);
-    
-    // Rimuove specificamente la linea dello Stop Loss
-    if(ObjectFind(0, InpSLName) >= 0) {
-        ObjectDelete(0, InpSLName);
+    // Rimuoviamo gli oggetti SOLO se l'EA viene rimosso dal grafico (REASON_REMOVE)
+    // Se cambiamo timeframe (REASON_CHARTCHANGE), NON cancelliamo la linea dello SL
+    if(reason == REASON_REMOVE) {
+        ObjectsDeleteAll(0, "BT_");
+        ObjectDelete(0, labelName);
+        if(ObjectFind(0, InpSLName) >= 0) {
+            ObjectDelete(0, InpSLName);
+        }
     }
     
-    // Ferma il timer
     EventKillTimer();
-    
-    Print("EA rimosso: Grafico pulito con successo.");
 }
 
 //+------------------------------------------------------------------+
@@ -79,6 +76,10 @@ void OnTimer() { UpdateLiveInfo(); }
 void UpdateLiveInfo() {
     double price = SymbolInfoDouble(_Symbol, SYMBOL_BID);
     double sl = ObjectGetDouble(0, InpSLName, OBJPROP_PRICE);
+    
+    // Se sl è 0 (es. linea appena creata), evitiamo calcoli errati
+    if(sl <= 0) return;
+
     double lots = CalculateLots(price, sl);
     double pips = MathAbs(price - sl) / _Point;
     
